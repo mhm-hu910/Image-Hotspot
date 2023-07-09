@@ -1,0 +1,59 @@
+.btn{
+    font-size: 18px;
+    padding: 6px;
+    cursor: pointer;
+}
+
+.shape{
+    fill:blue;
+    stroke:black;
+    stroke-width:3;
+    fill-opacity:0.1;
+    stroke-opacity:0.9;
+    stroke-dasharray: 6 4;
+}
+
+.moving-shape{
+    cursor: grab;
+}
+
+.vertex{
+    stroke: red;
+    fill: red;
+    cursor: move;
+}
+
+.container{
+    width: 75%;
+    padding-left: 60px;
+    margin-top: 25px;
+}
+
+.sub-container{
+    position: relative;
+    height: fit-content !important;
+}
+
+.image{
+    border: 2px solid black;
+    width: calc(100% - 4px);
+    height: auto;
+}
+
+.svg{
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.footer{
+    width: calc(100% - 16px);
+    height: 40px;
+    margin-top: 5px;
+    border: 2px solid black;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+}
