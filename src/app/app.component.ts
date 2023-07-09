@@ -102,8 +102,8 @@ export class AppComponent{
         {width: img.clientWidth, height: img.clientHeight},
         {x: event.clientX, y: event.clientY}
       );
-      shape.x = Math.trunc(pos.x - (shape.width/2) - offsets.offsetLeft);
-      shape.y = Math.trunc(pos.y - (shape.height/2) - offsets.offsetTop);
+      shape.x = Math.round(pos.x - (shape.width/2) - offsets.offsetLeft);
+      shape.y = Math.round(pos.y - (shape.height/2) - offsets.offsetTop);
     }
   }
 
@@ -208,7 +208,7 @@ export class AppComponent{
   resizeCircle = (event: MouseEvent) => {
     const shape = this.currentShape;
     const img = this.image?.nativeElement;
-    const offsets = this.getTopLeftOffsets();
+    const offsets = this.getTopLeftOffsetsResizing();
     if (shape.resizing) {
 
       let pos = getPointLocationBasedOnDisplayedImageSize(
@@ -242,7 +242,7 @@ export class AppComponent{
   resizeRect = (event: MouseEvent) => {
     const shape = this.currentShape;
     const img = this.image?.nativeElement;
-    const offsets = this.getTopLeftOffsets();
+    const offsets = this.getTopLeftOffsetsResizing();
     let pos = getPointLocationBasedOnDisplayedImageSize(
       {width: img.naturalWidth, height: img.naturalHeight},
     {width: img.clientWidth, height: img.clientHeight},
@@ -459,7 +459,7 @@ export class AppComponent{
         {x: shape.x, y: shape.y}
       );
       let w = Math.round((img.clientWidth / img.naturalWidth) * shape.width);
-      let h = Math.round((img.clientWidth / img.naturalWidth) * shape.height);
+      let h = Math.round((img.clientHeight / img.naturalHeight) * shape.height);
       shapeHtml.setAttribute('x', pos.x.toString());
       shapeHtml.setAttribute('y', pos.y.toString());
       shapeHtml.setAttribute('width', w.toString());
@@ -497,24 +497,26 @@ export class AppComponent{
     return (Math.round((img.clientWidth / img.naturalWidth) * circleShape.radius));
   }
 
-  getTopLeftOffsets2(){
-    const svg = this.img_svg?.nativeElement;
-    const element = svg.getBoundingClientRect();
-    const offsetTop = element.top + window.scrollY;
-    const offsetLeft = element.left + window.scrollX;
-
-    return{offsetLeft: offsetLeft + 2, offsetTop: offsetTop + 2};
-  }
 
   getTopLeftOffsets() {
+    const img = this.image?.nativeElement;
     const svg = this.img_svg?.nativeElement;
     const element = svg.getBoundingClientRect();
-    const scrollLeft = window.scrollX ;
-    const scrollTop = window.scrollY ;
-  
+    let left = Math.trunc((img.naturalWidth / img.clientWidth) * element.left);
+    let top = Math.trunc((img.naturalHeight / img.clientHeight) * element.top);
     return {
-      offsetLeft: element.left,
-      offsetTop: element.top
+      offsetTop: top,
+      offsetLeft: left
+    };
+  }
+
+  getTopLeftOffsetsResizing() {
+    const img = this.image?.nativeElement;
+    const svg = this.img_svg?.nativeElement;
+    const element = svg.getBoundingClientRect();
+    return {
+      offsetTop: Math.trunc(element.top),
+      offsetLeft: Math.trunc(element.left)
     };
   }
 }
