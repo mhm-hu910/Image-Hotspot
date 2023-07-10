@@ -123,6 +123,7 @@ export class AppComponent{
     this.img_svg?.nativeElement.addEventListener('mouseup', this.stopMoveCS);
   }
 
+
   moveCustomShape =  (event: MouseEvent) => {
     const shape = this.currentCustomShape;
     const img = this.image?.nativeElement;
@@ -133,11 +134,10 @@ export class AppComponent{
     const dx = event.movementX;
     const dy = event.movementY;
 
-    let d = getPointLocationBasedOnOriginalImageSize(
-      {width: img.naturalWidth, height: img.naturalHeight},
-        {width: img.clientWidth, height: img.clientHeight},
-        {x: dx, y: dy}
-    );
+    let d = {
+      x: (img.naturalWidth/img.clientWidth) * dx,
+      y: (img.naturalHeight/img.clientHeight) * dy
+    };
 
     shape.vertices = shape.vertices.map((vertex: { x: number; y: number; }) => ({
       x: vertex.x + d.x,
@@ -168,12 +168,13 @@ export class AppComponent{
   moveCustomShapeV =  (event: MouseEvent) => {
     const shape = this.currentCustomShape;
     const img = this.image?.nativeElement;
+    const offsets = this.getTopLeftOffsets();
     if (!shape.isMoving || shape.activeVertex === null) {
       return;
     }
   
-    const dx = event.movementX;
-    const dy = event.movementY;
+    const dx = event.clientX;
+    const dy = event.clientY;
 
     let d = getPointLocationBasedOnOriginalImageSize(
       {width: img.naturalWidth, height: img.naturalHeight},
@@ -182,8 +183,8 @@ export class AppComponent{
     );
     
     shape.vertices[shape.activeVertex] = {
-      x: shape.vertices[shape.activeVertex].x + d.x,
-      y: shape.vertices[shape.activeVertex].y + d.y
+      x: d.x - offsets.offsetLeft,
+      y: d.y - offsets.offsetTop
     };
   }
   
@@ -377,7 +378,7 @@ export class AppComponent{
 
   getLeftMostX(shape:any):number{
     let minX = 9999999;
-    let pointsArray = this.getPoitsArrayBasedOnDisplayedImageSize(shape);
+    let pointsArray = this.getPointsArrayBasedOnDisplayedImageSize(shape);
     for(let vertex of pointsArray){
       if(vertex.x < minX){
         minX = vertex.x;
@@ -388,7 +389,7 @@ export class AppComponent{
 
   getTopMostY(shape:any):number{
     let minY = 9999999;
-    let pointsArray = this.getPoitsArrayBasedOnDisplayedImageSize(shape);
+    let pointsArray = this.getPointsArrayBasedOnDisplayedImageSize(shape);
     for(let vertex of pointsArray){
       if(vertex.y < minY){
         minY = vertex.y;
@@ -423,11 +424,11 @@ export class AppComponent{
   }
 
   getVertex(shape: any, index: number){
-    let pointsArray = this.getPoitsArrayBasedOnDisplayedImageSize(shape);
+    let pointsArray = this.getPointsArrayBasedOnDisplayedImageSize(shape);
     return pointsArray[index];
   }
 
-  getPoitsArrayBasedOnDisplayedImageSize(shape: any){
+  getPointsArrayBasedOnDisplayedImageSize(shape: any){
     let cordinates = this.convertArrayToString(shape.vertices);
     let points = getPointsLocationBasedOnDisplayedImageSize(this.image?.nativeElement, cordinates);
     return this.convertStringToArray(points);
