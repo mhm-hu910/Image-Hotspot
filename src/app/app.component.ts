@@ -61,18 +61,21 @@ export class AppComponent{
 
   currentCustomShape:any = {};
   currentShape:any = {};
+  currentAnswer: answer|null = null;
 
 
-  startCircleMove(event: MouseEvent, shape: { isMoving: boolean; }) {
-    shape.isMoving = true;
-    this.currentShape = shape;
-    this.img_svg?.nativeElement.addEventListener('mousemove', this.moveCircleShape);
-    this.img_svg?.nativeElement.addEventListener('mouseup', this.stopMove);
+  startCircleMove(event: MouseEvent, answer: answer, image:HTMLImageElement, image_svg: HTMLElement) {
+    answer.shapeObject.isMoving = true;
+    this.currentAnswer = answer;
+    // console.log(shape);
+    // image_svg.addEventListener('mousemove', (event:MouseEvent) => {this.moveCircleShape(event, image)});
+    // image_svg.addEventListener('mouseup', (event:MouseEvent) => {this.stopMove(event, image, image_svg)});
   }
 
-  moveCircleShape = (event: MouseEvent) => {
-    const shape = this.currentShape;
-    const img = this.image?.nativeElement;
+  moveCircleShape (event:MouseEvent, image: HTMLImageElement, svg:HTMLElement) {
+
+    const shape = this.currentAnswer?.shapeObject;
+    const img = image;
     const offsets = this.getTopLeftOffsets();
     if (shape.isMoving) {
       let pos = getPointLocationBasedOnOriginalImageSize(
@@ -107,13 +110,13 @@ export class AppComponent{
     }
   }
 
-  stopMove = (event: MouseEvent) => { 
+  stopMove = () => { 
     const shape = this.currentShape;
     shape.isMoving = false;
-    this.img_svg?.nativeElement.removeEventListener('mousemove', this.moveCircleShape);
-    this.img_svg?.nativeElement.removeEventListener('mousemove', this.moveRectShape);
-    this.img_svg?.nativeElement.removeEventListener('mouseup', this.stopMove);
-    this.currentShape = null;
+    // image_svg.removeEventListener('mousemove', ()=>{this.moveCircleShape(event, image)});
+    // this.img_svg?.nativeElement.removeEventListener('mousemove', this.moveRectShape);
+    // image_svg.removeEventListener('mouseup', ()=>{this.stopMove(event, image, image_svg)});
+    this.currentAnswer = null;
   }
 
   startMoveCS(event: MouseEvent, shape: { isMoving: boolean; }) {
@@ -232,35 +235,56 @@ export class AppComponent{
     this.img_svg?.nativeElement.removeEventListener('mouseup', this.stopResizeCircle);
   }
 
-  startResizeRect(event: MouseEvent, shape: { resizing: boolean; }) {
+  startResizeRect(event: MouseEvent, shape: rectangle, corner: string) {
     event.preventDefault();
     shape.resizing = true;
     this.currentShape = shape;
-    this.img_svg?.nativeElement.addEventListener('mousemove', this.resizeRect);
+    this.resizeRectWithCorner = (event: MouseEvent) => this.resizeRect(event, corner);
+    this.img_svg?.nativeElement.addEventListener('mousemove', this.resizeRectWithCorner);
     this.img_svg?.nativeElement.addEventListener('mouseup', this.stopResizeRect);
   }
 
-  resizeRect = (event: MouseEvent) => {
+
+  resizeRectWithCorner!: (event: MouseEvent) => void;
+
+  resizeRect = (event: MouseEvent, corner:string) => {
     const shape = this.currentShape;
     const img = this.image?.nativeElement;
     const offsets = this.getTopLeftOffsetsResizing();
+    const d = this.getRectSize(shape);
     let pos = getPointLocationBasedOnDisplayedImageSize(
-      {width: img.naturalWidth, height: img.naturalHeight},
+    {width: img.naturalWidth, height: img.naturalHeight},
     {width: img.clientWidth, height: img.clientHeight},
     {x: shape.x, y: shape.y});
     
-    if (shape.resizing && (event.clientX > (pos.x + 10 + offsets.offsetLeft)) && (event.clientY > (pos.y + 10 + offsets.offsetTop))) {
+    if (shape.resizing) {
+      let sizeCondition:boolean = (shape.width >= 20) && (shape.height >= 20);
       let w = Math.round((img.naturalWidth / img.clientWidth) * (event.x - pos.x - offsets.offsetLeft));
       let h = Math.round((img.naturalWidth / img.clientWidth) * (event.y - pos.y - offsets.offsetTop));
-      shape.width = w;
-      shape.height = h;
+        if (corner === "bottom-right" && (event.clientX > (pos.x + 12 + offsets.offsetLeft)) && (event.clientY > (pos.y + 12 + offsets.offsetTop))) {
+            shape.width = w;
+            shape.height = h;
+        } else if (corner === "top-right" && (event.clientX > (pos.x + 12 + offsets.offsetLeft)) && (event.clientY < (pos.y + d.height - 12 + offsets.offsetTop))) {
+            shape.y += h;
+            shape.width = w;
+            shape.height -= h;
+        } else if (corner === "top-left" && (event.clientX < (pos.x + d.width - 12 + offsets.offsetLeft)) && (event.clientY < (pos.y + d.height - 12 + offsets.offsetTop))) {
+            shape.x += w;
+            shape.y += h;
+            shape.width -= w;
+            shape.height -= h;
+        } else if (corner === "bottom-left" && (event.clientX < (pos.x + d.width - 12 + offsets.offsetLeft)) && (event.clientY > (pos.y + 12 + offsets.offsetTop))) {
+            shape.x += w;
+            shape.width -= w;
+            shape.height = h;
+        }
     }
   }
   
   stopResizeRect= (event: MouseEvent) => {
     const shape = this.currentShape;
     shape.resizing = false;
-    this.img_svg?.nativeElement.removeEventListener('mousemove', this.resizeRect);
+    this.img_svg?.nativeElement.removeEventListener('mousemove', this.resizeRectWithCorner);
     this.img_svg?.nativeElement.removeEventListener('mouseup', this.stopResizeRect);
   }
 
@@ -519,6 +543,47 @@ export class AppComponent{
       offsetTop: Math.trunc(element.top),
       offsetLeft: Math.trunc(element.left)
     };
+  }
+  onMouseMove(event:MouseEvent, image: HTMLImageElement, svg:HTMLElement){
+    const answer = this.currentAnswer;
+    if (answer !== null){
+      let shape = answer.shapeObject;
+      if(answer.type === "circle"){
+        if(shape.isMoving){
+          this.moveCircleShape(event, image, svg);
+        }
+        else if(shape.resizing){
+
+        }
+      }
+      else if(answer.type === "rect"){
+        
+      }
+      else if(answer.type === "custom"){
+
+      }
+    }
+  }
+
+  onMouseUp(image: HTMLImageElement, svg:HTMLElement){
+    const answer = this.currentAnswer;
+    if (answer !== null){
+      let shape = answer.shapeObject;
+      if(answer.type === "circle"){
+        if(shape.isMoving){
+          this.stopMove();
+        }
+        else if(shape.resizing){
+
+        }
+      }
+      else if(answer.type === "rect"){
+        
+      }
+      else if(answer.type === "custom"){
+
+      }
+    }
   }
 }
 

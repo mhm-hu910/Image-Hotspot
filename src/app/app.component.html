@@ -4,20 +4,29 @@
   </div>
   <div class="sub-container">
     <img #img src="assets\images\world-map.png" class="image">
-    <svg #img_svg class="svg" (click)="addVertex($event)">
+    <svg (mousemove)="onMouseMove($event, img, img_svg)" (mouseup)="onMouseUp(img, img_svg)" #img_svg class="svg" (click)="addVertex($event)">
       <g *ngFor="let answer of answers; let i = index">
         <!-- Circles -->
         <g *ngIf="answer.type === 'circle' ">
-          <circle #circleShape (window:resize)="onResizeCircle(answer.shapeObject, circleShape)" [attr.cx]="getCirclePosition(answer.shapeObject).x" [attr.cy]="getCirclePosition(answer.shapeObject).y" [attr.r]="getCircleRadiusBasedOnDisplayedImageSize(answer.shapeObject)" (mousedown)="startCircleMove($event, answer.shapeObject)" stroke-width="3" class="shape moving-shape"/>
+          <circle #circleShape (window:resize)="onResizeCircle(answer.shapeObject, circleShape)" [attr.cx]="getCirclePosition(answer.shapeObject).x" [attr.cy]="getCirclePosition(answer.shapeObject).y" [attr.r]="getCircleRadiusBasedOnDisplayedImageSize(answer.shapeObject)" (mousedown)="startCircleMove($event, answer, img, img_svg)" stroke-width="3" class="shape moving-shape"/>
           <rect [attr.x]="getCirclePosition(answer.shapeObject).x + getCircleRadiusBasedOnDisplayedImageSize(answer.shapeObject) - 6" [attr.y]="getCirclePosition(answer.shapeObject).y - 6" [attr.width]="12" [attr.height]="12" style="fill:red; cursor: e-resize;" (mousedown)="startResizeCircle($event, answer.shapeObject)"/>
+          <rect [attr.x]="getCirclePosition(answer.shapeObject).x - getCircleRadiusBasedOnDisplayedImageSize(answer.shapeObject) - 6" [attr.y]="getCirclePosition(answer.shapeObject).y - 6" [attr.width]="12" [attr.height]="12" style="fill:red; cursor: e-resize;" (mousedown)="startResizeCircle($event, answer.shapeObject)"/>
           <text [attr.x]="getCirclePosition(answer.shapeObject).x - 3" [attr.y]="getCirclePosition(answer.shapeObject).y - getCircleRadiusBasedOnDisplayedImageSize(answer.shapeObject) - 5" style="cursor: pointer; color:red" (click)="removeShape(i)">X</text>
         </g>
 
         <!-- Rectangles -->
         <g *ngIf="answer.type === 'rect' ">
           <rect #rectShape (window:resize)="onResizeRect(answer.shapeObject, rectShape)" [attr.x]="getRectPosition(answer.shapeObject).x" [attr.y]="getRectPosition(answer.shapeObject).y" [attr.width]="getRectSize(answer.shapeObject).width" [attr.height]="getRectSize(answer.shapeObject).height" (mousedown)="startRectMove($event, answer.shapeObject)" stroke-width="3" class="shape moving-shape"/>
-          <rect [attr.x]="getRectPosition(answer.shapeObject).x + getRectSize(answer.shapeObject).width - 6" [attr.y]="getRectPosition(answer.shapeObject).y + getRectSize(answer.shapeObject).height - 6" [attr.width]="12" [attr.height]="12" style="fill:red; cursor: nw-resize;" (mousedown)="startResizeRect($event, answer.shapeObject)"/>
-          <text [attr.x]="getRectPosition(answer.shapeObject).x - 10" [attr.y]="getRectPosition(answer.shapeObject).y - 5" style="cursor: pointer; color:red" (click)="removeShape(i)">X</text>
+          <!-- bottom right -->
+          <rect [attr.x]="getRectPosition(answer.shapeObject).x + getRectSize(answer.shapeObject).width - 5" [attr.y]="getRectPosition(answer.shapeObject).y + getRectSize(answer.shapeObject).height - 5" [attr.width]="10" [attr.height]="10" style="fill:red; cursor: nw-resize;" (mousedown)="startResizeRect($event, answer.shapeObject, 'bottom-right')"/>
+          <!-- top right -->
+          <rect [attr.x]="getRectPosition(answer.shapeObject).x + getRectSize(answer.shapeObject).width - 5" [attr.y]="getRectPosition(answer.shapeObject).y - 5" [attr.width]="10" [attr.height]="10" style="fill:red; cursor: ne-resize;" (mousedown)="startResizeRect($event, answer.shapeObject, 'top-right')"/>
+          <!-- top left -->
+          <rect [attr.x]="getRectPosition(answer.shapeObject).x - 5" [attr.y]="getRectPosition(answer.shapeObject).y - 5" [attr.width]="10" [attr.height]="10" style="fill:red; cursor: nw-resize;" (mousedown)="startResizeRect($event, answer.shapeObject, 'top-left')"/>
+          <!-- bottom left -->
+          <rect [attr.x]="getRectPosition(answer.shapeObject).x - 5" [attr.y]="getRectPosition(answer.shapeObject).y + getRectSize(answer.shapeObject).height - 5" [attr.width]="10" [attr.height]="10" style="fill:red; cursor: ne-resize;" (mousedown)="startResizeRect($event, answer.shapeObject, 'bottom-left')"/>
+
+          <text [attr.x]="getRectPosition(answer.shapeObject).x - 12" [attr.y]="getRectPosition(answer.shapeObject).y - 10" style="cursor: pointer; color:red" (click)="removeShape(i)">X</text>
         </g>
 
         <!-- Custome shapes -->
