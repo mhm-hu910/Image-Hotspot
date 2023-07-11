@@ -4,52 +4,52 @@
   </div>
   <div class="sub-container">
     <img #img src="assets\images\world-map.png" class="image">
-    <svg (mousemove)="onMouseMove($event, img, img_svg)" (mouseup)="onMouseUp(img, img_svg)" #img_svg class="svg" (click)="addVertex($event)">
+    <svg #img_svg (mousemove)="onMouseMove($event, img, img_svg)" (mouseup)="onMouseUp()" class="svg" (click)="addVertex($event, img, img_svg)">
       <g *ngFor="let answer of answers; let i = index">
         <!-- Circles -->
         <g *ngIf="answer.type === 'circle' ">
-          <circle #circleShape (window:resize)="onResizeCircle(answer.shapeObject, circleShape)" [attr.cx]="getCirclePosition(answer.shapeObject).x" [attr.cy]="getCirclePosition(answer.shapeObject).y" [attr.r]="getCircleRadiusBasedOnDisplayedImageSize(answer.shapeObject)" (mousedown)="startCircleMove($event, answer, img, img_svg)" stroke-width="3" class="shape moving-shape"/>
-          <rect [attr.x]="getCirclePosition(answer.shapeObject).x + getCircleRadiusBasedOnDisplayedImageSize(answer.shapeObject) - 6" [attr.y]="getCirclePosition(answer.shapeObject).y - 6" [attr.width]="12" [attr.height]="12" style="fill:red; cursor: e-resize;" (mousedown)="startResizeCircle($event, answer.shapeObject)"/>
-          <rect [attr.x]="getCirclePosition(answer.shapeObject).x - getCircleRadiusBasedOnDisplayedImageSize(answer.shapeObject) - 6" [attr.y]="getCirclePosition(answer.shapeObject).y - 6" [attr.width]="12" [attr.height]="12" style="fill:red; cursor: e-resize;" (mousedown)="startResizeCircle($event, answer.shapeObject)"/>
-          <text [attr.x]="getCirclePosition(answer.shapeObject).x - 3" [attr.y]="getCirclePosition(answer.shapeObject).y - getCircleRadiusBasedOnDisplayedImageSize(answer.shapeObject) - 5" style="cursor: pointer; color:red" (click)="removeShape(i)">X</text>
+          <circle #circleShape (window:resize)="onResizeCircle(answer.shapeObject, circleShape, img)" [attr.cx]="getCirclePosition(answer.shapeObject, img).x" [attr.cy]="getCirclePosition(answer.shapeObject, img).y" [attr.r]="getCircleRadiusBasedOnDisplayedImageSize(answer.shapeObject, img)" (mousedown)="startCircleMove($event, answer, img, img_svg)" stroke-width="3" class="shape moving-shape"/>
+          <rect [attr.x]="getCirclePosition(answer.shapeObject, img).x + getCircleRadiusBasedOnDisplayedImageSize(answer.shapeObject, img) - 5" [attr.y]="getCirclePosition(answer.shapeObject, img).y - 5" [attr.width]="10" [attr.height]="10" style="fill:red; cursor: e-resize;" (mousedown)="startResizeCircle(answer)"/>
+          <rect [attr.x]="getCirclePosition(answer.shapeObject, img).x - getCircleRadiusBasedOnDisplayedImageSize(answer.shapeObject, img) - 5" [attr.y]="getCirclePosition(answer.shapeObject, img).y - 5" [attr.width]="10" [attr.height]="10" style="fill:red; cursor: e-resize;" (mousedown)="startResizeCircle(answer)"/>
+          <text [attr.x]="getCirclePosition(answer.shapeObject, img).x - 3" [attr.y]="getCirclePosition(answer.shapeObject, img).y - getCircleRadiusBasedOnDisplayedImageSize(answer.shapeObject, img) - 5" style="cursor: pointer; color:red" (click)="removeShape(i)">X</text>
         </g>
 
         <!-- Rectangles -->
         <g *ngIf="answer.type === 'rect' ">
-          <rect #rectShape (window:resize)="onResizeRect(answer.shapeObject, rectShape)" [attr.x]="getRectPosition(answer.shapeObject).x" [attr.y]="getRectPosition(answer.shapeObject).y" [attr.width]="getRectSize(answer.shapeObject).width" [attr.height]="getRectSize(answer.shapeObject).height" (mousedown)="startRectMove($event, answer.shapeObject)" stroke-width="3" class="shape moving-shape"/>
-          <!-- bottom right -->
-          <rect [attr.x]="getRectPosition(answer.shapeObject).x + getRectSize(answer.shapeObject).width - 5" [attr.y]="getRectPosition(answer.shapeObject).y + getRectSize(answer.shapeObject).height - 5" [attr.width]="10" [attr.height]="10" style="fill:red; cursor: nw-resize;" (mousedown)="startResizeRect($event, answer.shapeObject, 'bottom-right')"/>
-          <!-- top right -->
-          <rect [attr.x]="getRectPosition(answer.shapeObject).x + getRectSize(answer.shapeObject).width - 5" [attr.y]="getRectPosition(answer.shapeObject).y - 5" [attr.width]="10" [attr.height]="10" style="fill:red; cursor: ne-resize;" (mousedown)="startResizeRect($event, answer.shapeObject, 'top-right')"/>
-          <!-- top left -->
-          <rect [attr.x]="getRectPosition(answer.shapeObject).x - 5" [attr.y]="getRectPosition(answer.shapeObject).y - 5" [attr.width]="10" [attr.height]="10" style="fill:red; cursor: nw-resize;" (mousedown)="startResizeRect($event, answer.shapeObject, 'top-left')"/>
-          <!-- bottom left -->
-          <rect [attr.x]="getRectPosition(answer.shapeObject).x - 5" [attr.y]="getRectPosition(answer.shapeObject).y + getRectSize(answer.shapeObject).height - 5" [attr.width]="10" [attr.height]="10" style="fill:red; cursor: ne-resize;" (mousedown)="startResizeRect($event, answer.shapeObject, 'bottom-left')"/>
+          <rect #rectShape (window:resize)="onResizeRect(answer.shapeObject, rectShape, img)" [attr.x]="getRectPosition(answer.shapeObject, img).x" [attr.y]="getRectPosition(answer.shapeObject, img).y" [attr.width]="getRectSize(answer.shapeObject, img).width" [attr.height]="getRectSize(answer.shapeObject, img).height" (mousedown)="startRectMove(answer)" stroke-width="3" class="shape moving-shape"/>
+          <!-- bottom right vertex -->
+          <rect [attr.x]="getRectPosition(answer.shapeObject, img).x + getRectSize(answer.shapeObject, img).width - 5" [attr.y]="getRectPosition(answer.shapeObject, img).y + getRectSize(answer.shapeObject, img).height - 5" [attr.width]="10" [attr.height]="10" style="fill:red; cursor: nw-resize;" (mousedown)="startResizeRect($event, answer.shapeObject, img, img_svg, 'bottom-right')"/>
+          <!-- top right vertex -->
+          <rect [attr.x]="getRectPosition(answer.shapeObject, img).x + getRectSize(answer.shapeObject, img).width - 5" [attr.y]="getRectPosition(answer.shapeObject, img).y - 5" [attr.width]="10" [attr.height]="10" style="fill:red; cursor: ne-resize;" (mousedown)="startResizeRect($event, answer.shapeObject, img, img_svg, 'top-right')"/>
+          <!-- top left vertex -->
+          <rect [attr.x]="getRectPosition(answer.shapeObject, img).x - 5" [attr.y]="getRectPosition(answer.shapeObject, img).y - 5" [attr.width]="10" [attr.height]="10" style="fill:red; cursor: nw-resize;" (mousedown)="startResizeRect($event, answer.shapeObject, img, img_svg, 'top-left')"/>
+          <!-- bottom left vertex -->
+          <rect [attr.x]="getRectPosition(answer.shapeObject, img).x - 5" [attr.y]="getRectPosition(answer.shapeObject, img).y + getRectSize(answer.shapeObject, img).height - 5" [attr.width]="10" [attr.height]="10" style="fill:red; cursor: ne-resize;" (mousedown)="startResizeRect($event, answer.shapeObject, img, img_svg, 'bottom-left')"/>
 
-          <text [attr.x]="getRectPosition(answer.shapeObject).x - 12" [attr.y]="getRectPosition(answer.shapeObject).y - 10" style="cursor: pointer; color:red" (click)="removeShape(i)">X</text>
+          <text [attr.x]="getRectPosition(answer.shapeObject, img).x - 12" [attr.y]="getRectPosition(answer.shapeObject, img).y - 10" style="cursor: pointer; color:red" (click)="removeShape(i)">X</text>
         </g>
 
         <!-- Custome shapes -->
         <g *ngIf="answer.type === 'custom' ">
-          <path #shape [attr.d]="getPathData(answer.shapeObject)" (window:resize)="onResizeCShape(answer.shapeObject, shape)" (mousedown)="startMoveCS($event, answer.shapeObject)" stroke-width="3" class="shape moving-shape"/>
-          <text [attr.x]="getLeftMostX(answer.shapeObject) - 10" [attr.y]="getTopMostY(answer.shapeObject) - 5" style="cursor: pointer; color:red" (click)="removeShape(i)">X</text>
-          <text *ngIf="!creating" [attr.x]="getLeftMostX(answer.shapeObject) + 5" [attr.y]="getTopMostY(answer.shapeObject) - 5" style="cursor: pointer; color:red" (click)="editCustomeShape(i, answer.shapeObject)">| Edit</text>
+          <path #shape [attr.d]="getPathData(answer.shapeObject, img)" (window:resize)="onResizeCShape(answer.shapeObject, shape, img)" (mousedown)="startMoveCS(answer)" stroke-width="3" class="shape moving-shape"/>
+          <text [attr.x]="getLeftMostX(answer.shapeObject, img) - 10" [attr.y]="getTopMostY(answer.shapeObject, img) - 5" style="cursor: pointer; color:red" (click)="removeShape(i)">X</text>
+          <text *ngIf="!creating" [attr.x]="getLeftMostX(answer.shapeObject, img) + 5" [attr.y]="getTopMostY(answer.shapeObject, img) - 5" style="cursor: pointer; color:red" (click)="editCustomeShape(i, answer.shapeObject)">| Edit</text>
           <g *ngFor="let vertex of answer.shapeObject.vertices; let j = index">
-            <circle [attr.cx]="getVertex(answer.shapeObject, j).x" [attr.cy]="getVertex(answer.shapeObject, j).y" r="6" (mousedown)="startVertexMove($event, answer.shapeObject, j)" class="vertex"/>
+            <circle [attr.cx]="getVertex(answer.shapeObject, j, img).x" [attr.cy]="getVertex(answer.shapeObject, j, img).y" r="6" (mousedown)="startVertexMove($event, answer.shapeObject, j, img, img_svg)" class="vertex"/>
           </g>
         </g>
       </g>
 
       <!-- Custome shape being created -->
       <g *ngIf="created">
-        <path #crShape [attr.d]="getPathData(currentShapeBeingCreated)" (window:resize)="onResizeCShape(currentShapeBeingCreated, crShape)" stroke-width="3" class="shape"/>
-        <circle *ngFor="let vertex of currentShapeBeingCreated?.vertices; let i = index" [attr.cx]="getVertex(currentShapeBeingCreated, i).x" [attr.cy]="getVertex(currentShapeBeingCreated, i).y" r="6" (mousedown)="startVertexMove($event, currentShapeBeingCreated!, i)"  class="vertex"/>
+        <path #crShape [attr.d]="getPathData(currentShapeBeingCreated, img)" (window:resize)="onResizeCShape(currentShapeBeingCreated, crShape, img)" stroke-width="3" class="shape"/>
+        <circle *ngFor="let vertex of currentShapeBeingCreated?.vertices; let i = index" [attr.cx]="getVertex(currentShapeBeingCreated, i, img).x" [attr.cy]="getVertex(currentShapeBeingCreated, i, img).y" r="6" (mousedown)="startVertexMove($event, currentShapeBeingCreated!, i, img, img_svg)"  class="vertex"/>
       </g>
     </svg>
   </div>
   <div class="footer">
-    <button class="btn" (click)="addCircle()">Add Circle</button>
-    <button class="btn" (click)="addRect()" style="margin-left: 8px;">Add Rectangle</button>
+    <button class="btn" (click)="addCircle(img)">Add Circle</button>
+    <button class="btn" (click)="addRect(img)" style="margin-left: 8px;">Add Rectangle</button>
     <button [disabled]="creating" class="btn" (click)="startCreateShape()" style="margin-left: 8px;">Create a Shape</button>
     <button *ngIf="creating" [disabled]="!created" class="btn" (click)="finishShape()" style="margin-left: 8px;">Finish Shape</button>
     <button *ngIf="creating" class="btn" (click)="cancelShape()" style="margin-left: 8px;">Cancel</button>

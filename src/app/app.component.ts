@@ -45,9 +45,9 @@ export interface custom{
 export class AppComponent{
 
   title = "Image Hotspot";
-  @ViewChild('img_svg', { static: true }) img_svg!: ElementRef | null;
-  @ViewChild('img', { static: true }) image!: ElementRef | null;
-  //@ViewChildren('shape') shapes!: QueryList<ElementRef>;
+  // @ViewChild('img_svg', { static: true }) img_svg!: ElementRef | null;
+  // @ViewChild('img', { static: true }) image!: ElementRef | null;
+  // @ViewChildren('shape') shapes!: QueryList<ElementRef>;
 
 
   answers:answer[] = []
@@ -59,24 +59,19 @@ export class AppComponent{
   edited = false;
   tempShape:custom | null = null;
 
-  currentCustomShape:any = {};
-  currentShape:any = {};
   currentAnswer: answer|null = null;
 
 
   startCircleMove(event: MouseEvent, answer: answer, image:HTMLImageElement, image_svg: HTMLElement) {
     answer.shapeObject.isMoving = true;
     this.currentAnswer = answer;
-    // console.log(shape);
-    // image_svg.addEventListener('mousemove', (event:MouseEvent) => {this.moveCircleShape(event, image)});
-    // image_svg.addEventListener('mouseup', (event:MouseEvent) => {this.stopMove(event, image, image_svg)});
   }
 
   moveCircleShape (event:MouseEvent, image: HTMLImageElement, svg:HTMLElement) {
 
     const shape = this.currentAnswer?.shapeObject;
     const img = image;
-    const offsets = this.getTopLeftOffsets();
+    const offsets = this.getTopLeftOffsets(image, svg);
     if (shape.isMoving) {
       let pos = getPointLocationBasedOnOriginalImageSize(
         {width: img.naturalWidth, height: img.naturalHeight},
@@ -88,17 +83,15 @@ export class AppComponent{
     }
   }
 
-  startRectMove(event: MouseEvent, shape: { isMoving: boolean; }){
-    shape.isMoving = true;
-    this.currentShape = shape;
-    this.img_svg?.nativeElement.addEventListener('mousemove', this.moveRectShape);
-    this.img_svg?.nativeElement.addEventListener('mouseup', this.stopMove);
+  startRectMove(answer: answer){
+    answer.shapeObject.isMoving = true;
+    this.currentAnswer = answer;
   }
 
-  moveRectShape = (event: MouseEvent) => {
-    const shape = this.currentShape;
-    const img = this.image?.nativeElement;
-    const offsets = this.getTopLeftOffsets();
+  moveRectShape(event:MouseEvent, image: HTMLImageElement, svg:HTMLElement) {
+    const shape = this.currentAnswer?.shapeObject;
+    const img = image;
+    const offsets = this.getTopLeftOffsets(image, svg);
     if (shape.isMoving) {
       let pos = getPointLocationBasedOnOriginalImageSize(
         {width: img.naturalWidth, height: img.naturalHeight},
@@ -111,25 +104,20 @@ export class AppComponent{
   }
 
   stopMove = () => { 
-    const shape = this.currentShape;
+    const shape = this.currentAnswer?.shapeObject;
     shape.isMoving = false;
-    // image_svg.removeEventListener('mousemove', ()=>{this.moveCircleShape(event, image)});
-    // this.img_svg?.nativeElement.removeEventListener('mousemove', this.moveRectShape);
-    // image_svg.removeEventListener('mouseup', ()=>{this.stopMove(event, image, image_svg)});
     this.currentAnswer = null;
   }
 
-  startMoveCS(event: MouseEvent, shape: { isMoving: boolean; }) {
-    shape.isMoving = true;
-    this.currentCustomShape = shape;
-    this.img_svg?.nativeElement.addEventListener('mousemove', this.moveCustomShape);
-    this.img_svg?.nativeElement.addEventListener('mouseup', this.stopMoveCS);
+  startMoveCS(answer: answer) {
+    answer.shapeObject.isMoving = true;
+    this.currentAnswer = answer;
   }
 
 
-  moveCustomShape =  (event: MouseEvent) => {
-    const shape = this.currentCustomShape;
-    const img = this.image?.nativeElement;
+  moveCustomShape (event:MouseEvent, image: HTMLImageElement, svg:HTMLElement) {
+    const shape = this.currentAnswer?.shapeObject;
+    const img = image;
     if (!shape.isMoving) {
       return;
     }
@@ -148,30 +136,29 @@ export class AppComponent{
     }));
   }
 
-  stopMoveCS  =  (event: MouseEvent) => { 
-    const shape = this.currentCustomShape;
+  stopMoveCS() { 
+    const shape = this.currentAnswer?.shapeObject;
     shape.isMoving = false;
-    if(shape.activeVertex){
-      shape.activeVertex = null;
-    }
-    this.img_svg?.nativeElement.removeEventListener('mousemove', this.moveCustomShape);
-    this.img_svg?.nativeElement.removeEventListener('mouseup', this.stopMoveCS);
+    this.currentAnswer = null;
   }
 
-  startVertexMove(event: MouseEvent, shape: { isMoving: any; vertices: any[]; activeVertex:any; }, vertexIndex: number) {
+  startVertexMove(event: MouseEvent, shape: { isMoving: any; vertices: any[]; activeVertex:any; }, vertexIndex: number, image:HTMLImageElement, svg:HTMLElement) {
     if(!shape.isMoving){
       shape.isMoving = true;
       shape.activeVertex = vertexIndex;
-      this.currentCustomShape = shape;
-      this.img_svg?.nativeElement.addEventListener('mousemove', this.moveCustomShapeV);
-      this.img_svg?.nativeElement.addEventListener('mouseup', this.stopMoveV);   
+      this.moveCustomShapeVertex = (event: MouseEvent) => this.moveCustomShapeV(event, shape, image, svg);
+      this.stopMoveVertex = (event: MouseEvent) => this.stopMoveV(event, shape, image, svg);
+      svg.addEventListener('mousemove', this.moveCustomShapeVertex);
+      svg.addEventListener('mouseup', this.stopMoveVertex);   
     }
   }
+  moveCustomShapeVertex!: (event: MouseEvent) => void;
+  stopMoveVertex!: (event: MouseEvent) => void;
+
   
-  moveCustomShapeV =  (event: MouseEvent) => {
-    const shape = this.currentCustomShape;
-    const img = this.image?.nativeElement;
-    const offsets = this.getTopLeftOffsets();
+  moveCustomShapeV =  (event: MouseEvent, shape: any, image: HTMLImageElement, svg:HTMLElement) => {
+    const img = image;
+    const offsets = this.getTopLeftOffsets(image, svg);
     if (!shape.isMoving || shape.activeVertex === null) {
       return;
     }
@@ -191,28 +178,24 @@ export class AppComponent{
     };
   }
   
-  stopMoveV = (event: MouseEvent) => {  
-    const shape = this.currentCustomShape;
+  stopMoveV = (event: MouseEvent, shape: any, image: HTMLImageElement, svg:HTMLElement) => {  
     shape.isMoving = false;
     if(shape.activeVertex){
       shape.activeVertex = null;
     }
-    this.img_svg?.nativeElement.removeEventListener('mousemove', this.moveCustomShapeV);
-    this.img_svg?.nativeElement.removeEventListener('mouseup', this.stopMoveV);
+    svg.removeEventListener('mousemove', this.moveCustomShapeVertex);
+    svg.removeEventListener('mouseup', this.stopMoveVertex);
   }
 
-  startResizeCircle(event: MouseEvent, shape: { resizing: boolean; }){
-    event.preventDefault();
-    shape.resizing = true;
-    this.currentShape = shape;
-    this.img_svg?.nativeElement.addEventListener('mousemove', this.resizeCircle);
-    this.img_svg?.nativeElement.addEventListener('mouseup', this.stopResizeCircle);
+  startResizeCircle(answer: answer){
+    answer.shapeObject.resizing = true;
+    this.currentAnswer = answer;
   }
 
-  resizeCircle = (event: MouseEvent) => {
-    const shape = this.currentShape;
-    const img = this.image?.nativeElement;
-    const offsets = this.getTopLeftOffsetsResizing();
+  resizeCircle (event:MouseEvent, image: HTMLImageElement, svg:HTMLElement) {
+    const shape = this.currentAnswer?.shapeObject;
+    const img = image;
+    const offsets = this.getTopLeftOffsetsResizing(svg);
     if (shape.resizing) {
 
       let pos = getPointLocationBasedOnDisplayedImageSize(
@@ -228,37 +211,33 @@ export class AppComponent{
     }
   }
 
-  stopResizeCircle = (event: MouseEvent) => {
-    const shape = this.currentShape;
+  stopResizeCircle() {
+    const shape = this.currentAnswer?.shapeObject;
     shape.resizing = false;
-    this.img_svg?.nativeElement.removeEventListener('mousemove', this.resizeCircle);
-    this.img_svg?.nativeElement.removeEventListener('mouseup', this.stopResizeCircle);
+    this.currentAnswer = null;
   }
 
-  startResizeRect(event: MouseEvent, shape: rectangle, corner: string) {
-    event.preventDefault();
+  startResizeRect(event: MouseEvent, shape: rectangle, image:HTMLImageElement, svg:HTMLElement, corner: string) {
     shape.resizing = true;
-    this.currentShape = shape;
-    this.resizeRectWithCorner = (event: MouseEvent) => this.resizeRect(event, corner);
-    this.img_svg?.nativeElement.addEventListener('mousemove', this.resizeRectWithCorner);
-    this.img_svg?.nativeElement.addEventListener('mouseup', this.stopResizeRect);
+    this.resizeRectWithCorner = (event: MouseEvent) => this.resizeRect(event, shape, image, svg, corner);
+    this.stopResizeRectWithCorner = (event: MouseEvent) => this.stopResizeRect(event, shape, svg);
+    svg.addEventListener('mousemove', this.resizeRectWithCorner);
+    svg.addEventListener('mouseup', this.stopResizeRectWithCorner);
   }
-
 
   resizeRectWithCorner!: (event: MouseEvent) => void;
+  stopResizeRectWithCorner!: (event: MouseEvent) => void;
 
-  resizeRect = (event: MouseEvent, corner:string) => {
-    const shape = this.currentShape;
-    const img = this.image?.nativeElement;
-    const offsets = this.getTopLeftOffsetsResizing();
-    const d = this.getRectSize(shape);
+  resizeRect = (event: MouseEvent, shape:rectangle, image:HTMLImageElement, svg:HTMLElement, corner:string) => {
+    const img = image;
+    const offsets = this.getTopLeftOffsetsResizing(svg);
+    const d = this.getRectSize(shape, image);
     let pos = getPointLocationBasedOnDisplayedImageSize(
     {width: img.naturalWidth, height: img.naturalHeight},
     {width: img.clientWidth, height: img.clientHeight},
     {x: shape.x, y: shape.y});
     
     if (shape.resizing) {
-      let sizeCondition:boolean = (shape.width >= 20) && (shape.height >= 20);
       let w = Math.round((img.naturalWidth / img.clientWidth) * (event.x - pos.x - offsets.offsetLeft));
       let h = Math.round((img.naturalWidth / img.clientWidth) * (event.y - pos.y - offsets.offsetTop));
         if (corner === "bottom-right" && (event.clientX > (pos.x + 12 + offsets.offsetLeft)) && (event.clientY > (pos.y + 12 + offsets.offsetTop))) {
@@ -281,18 +260,17 @@ export class AppComponent{
     }
   }
   
-  stopResizeRect= (event: MouseEvent) => {
-    const shape = this.currentShape;
+  stopResizeRect = (event: MouseEvent, shape: rectangle, svg:HTMLElement) => {
     shape.resizing = false;
-    this.img_svg?.nativeElement.removeEventListener('mousemove', this.resizeRectWithCorner);
-    this.img_svg?.nativeElement.removeEventListener('mouseup', this.stopResizeRect);
+    svg.removeEventListener('mousemove', this.resizeRectWithCorner);
+    svg.removeEventListener('mouseup', this.stopResizeRectWithCorner);
   }
 
-  addCircle(){
+  addCircle(image: HTMLImageElement){
     let pos = getPointLocationBasedOnOriginalImageSize(
-      {width: this.image?.nativeElement.naturalWidth, height: this.image?.nativeElement.naturalHeight},
-      {width: this.image?.nativeElement.clientWidth, height: this.image?.nativeElement.clientHeight},
-      {x: (this.image?.nativeElement.clientWidth/2), y: (this.image?.nativeElement.clientHeight/2)}
+      {width: image.naturalWidth, height: image.naturalHeight},
+      {width: image.clientWidth, height: image.clientHeight},
+      {x: (image.clientWidth/2), y: (image.clientHeight/2)}
     );
 
     let newCircle = {
@@ -302,18 +280,17 @@ export class AppComponent{
       resizing: false,
       isMoving: false
     };
-    //this.circles.push(newCircle);
     this.answers.push({
       shapeObject: newCircle,
       type: 'circle'
     });
   }
 
-  addRect(){
+  addRect(image: HTMLImageElement){
     let pos = getPointLocationBasedOnOriginalImageSize(
-      {width: this.image?.nativeElement.naturalWidth, height: this.image?.nativeElement.naturalHeight},
-      {width: this.image?.nativeElement.clientWidth, height: this.image?.nativeElement.clientHeight},
-      {x: this.image?.nativeElement.clientWidth/2, y: this.image?.nativeElement.clientHeight/2}
+      {width: image.naturalWidth, height: image.naturalHeight},
+      {width: image.clientWidth, height: image.clientHeight},
+      {x: image.clientWidth/2, y: image.clientHeight/2}
     );
     let newRect = {
       x: pos.x,
@@ -323,7 +300,6 @@ export class AppComponent{
       resizing: false,
       isMoving: false
     };
-    //this.rectangles.push(newRect);
     this.answers.push({
       shapeObject: newRect,
       type: 'rect'
@@ -339,9 +315,9 @@ export class AppComponent{
     this.currentShapeBeingCreated = { vertices: [], isMoving: false, resizing: false, activeVertex: null };
   }
 
-  addVertex(event: MouseEvent) {
-    const img = this.image?.nativeElement;
-    const offsets = this.getTopLeftOffsets();
+  addVertex(event: MouseEvent, image: HTMLImageElement, svg: HTMLElement) {
+    const img = image;
+    const offsets = this.getTopLeftOffsets(image, svg);
     if (this.currentShapeBeingCreated && !this.edited) {
       this.created = true;
       let pos = getPointLocationBasedOnOriginalImageSize(
@@ -360,7 +336,6 @@ export class AppComponent{
     if (this.currentShapeBeingCreated) {
       this.creating = false;
       this.created = false;
-      //this.customShapes.push(this.currentShapeBeingCreated);
       this.answers.push({
         shapeObject: this.currentShapeBeingCreated,
         type: 'custom'
@@ -384,9 +359,9 @@ export class AppComponent{
     });
   }
 
-  getPathData(customShape: any): string {
+  getPathData(customShape: any, image:HTMLImageElement): string {
     let cordinates = this.convertArrayToString(customShape.vertices);
-    let points = getPointsLocationBasedOnDisplayedImageSize(this.image?.nativeElement, cordinates);
+    let points = getPointsLocationBasedOnDisplayedImageSize(image, cordinates);
   
     let pointsArray = points.split(' ').map(point => point.split(',').map(Number));
   
@@ -400,9 +375,9 @@ export class AppComponent{
   }
   
 
-  getLeftMostX(shape:any):number{
+  getLeftMostX(shape:any, image:HTMLImageElement):number{
     let minX = 9999999;
-    let pointsArray = this.getPointsArrayBasedOnDisplayedImageSize(shape);
+    let pointsArray = this.getPointsArrayBasedOnDisplayedImageSize(shape, image);
     for(let vertex of pointsArray){
       if(vertex.x < minX){
         minX = vertex.x;
@@ -411,9 +386,9 @@ export class AppComponent{
     return minX;
   }
 
-  getTopMostY(shape:any):number{
+  getTopMostY(shape:any, image:HTMLImageElement):number{
     let minY = 9999999;
-    let pointsArray = this.getPointsArrayBasedOnDisplayedImageSize(shape);
+    let pointsArray = this.getPointsArrayBasedOnDisplayedImageSize(shape, image);
     for(let vertex of pointsArray){
       if(vertex.y < minY){
         minY = vertex.y;
@@ -447,37 +422,37 @@ export class AppComponent{
     this.edited = true;
   }
 
-  getVertex(shape: any, index: number){
-    let pointsArray = this.getPointsArrayBasedOnDisplayedImageSize(shape);
+  getVertex(shape: any, index: number, image:HTMLImageElement){
+    let pointsArray = this.getPointsArrayBasedOnDisplayedImageSize(shape, image);
     return pointsArray[index];
   }
 
-  getPointsArrayBasedOnDisplayedImageSize(shape: any){
+  getPointsArrayBasedOnDisplayedImageSize(shape: any, image:HTMLImageElement){
     let cordinates = this.convertArrayToString(shape.vertices);
-    let points = getPointsLocationBasedOnDisplayedImageSize(this.image?.nativeElement, cordinates);
+    let points = getPointsLocationBasedOnDisplayedImageSize(image, cordinates);
     return this.convertStringToArray(points);
   }
 
-  onResizeCShape(shape:any, shapeHtml:HTMLElement) {
-    let newPath = this.getPathData(shape);
+  onResizeCShape(shape:any, shapeHtml:HTMLElement, image:HTMLImageElement) {
+    let newPath = this.getPathData(shape, image);
     shapeHtml.setAttribute("d", newPath);
   }
 
-  onResizeCircle(shape: circle, shapeHtml: HTMLElement) {
-    const img = this.image?.nativeElement;
+  onResizeCircle(shape: circle, shapeHtml: HTMLElement, image:HTMLImageElement) {
+    const img = image;
     let pos = getPointLocationBasedOnDisplayedImageSize(
         {width: img.naturalWidth, height: img.naturalHeight},
         {width: img.clientWidth, height: img.clientHeight},
         {x: shape.x, y: shape.y}
       );
-    let newRadius = this.getCircleRadiusBasedOnDisplayedImageSize(shape);
+    let newRadius = this.getCircleRadiusBasedOnDisplayedImageSize(shape, img);
     shapeHtml.setAttribute('cx', pos.x.toString());
     shapeHtml.setAttribute('cy', pos.y.toString());
     shapeHtml.setAttribute('r', newRadius.toString());
   }
 
-  onResizeRect(shape: any, shapeHtml: HTMLElement){
-    const img = this.image?.nativeElement;
+  onResizeRect(shape: rectangle, shapeHtml: HTMLElement, image:HTMLImageElement){
+    const img = image;
     let pos = getPointLocationBasedOnDisplayedImageSize(
         {width: img.naturalWidth, height: img.naturalHeight},
         {width: img.clientWidth, height: img.clientHeight},
@@ -491,41 +466,34 @@ export class AppComponent{
       shapeHtml.setAttribute('height', h.toString());
   }
 
-  getCirclePosition(circleShape:any){
-    return getPointLocationBasedOnDisplayedImageSize({width: this.image?.nativeElement.naturalWidth, height: this.image?.nativeElement.naturalHeight},
-      {width: this.image?.nativeElement.clientWidth, height: this.image?.nativeElement.clientHeight},
+  getCirclePosition(circleShape:circle, image:HTMLImageElement){
+    return getPointLocationBasedOnDisplayedImageSize({width: image.naturalWidth, height: image.naturalHeight},
+      {width: image.clientWidth, height: image.clientHeight},
       {x: circleShape.x, y: circleShape.y}
       );
   }
 
-  getRectPosition(rectShape: any){
-    return getPointLocationBasedOnDisplayedImageSize({width: this.image?.nativeElement.naturalWidth, height: this.image?.nativeElement.naturalHeight},
-      {width: this.image?.nativeElement.clientWidth, height: this.image?.nativeElement.clientHeight},
+  getRectPosition(rectShape: rectangle, image:HTMLImageElement){
+    return getPointLocationBasedOnDisplayedImageSize({width: image.naturalWidth, height: image.naturalHeight},
+      {width: image.clientWidth, height: image.clientHeight},
       {x: rectShape.x, y: rectShape.y}
       );
   }
 
-  getRectSize(rectShape: any){
-    const img = this.image?.nativeElement;
+  getRectSize(rectShape: rectangle, image:HTMLImageElement){
+    const img = image;
     let w = Math.round((img.clientWidth / img.naturalWidth) * rectShape.width);
     let h = Math.round((img.clientWidth / img.naturalWidth) * rectShape.height);
     return({width: w, height: h});
   }
 
-  getCircleRadiusBasedOnOriginalImageSize(circleShape:any){
-    let img = this.image?.nativeElement;
-    return (Math.round((img.naturalWidth / img.clientWidth) * circleShape.radius));
-  }
-
-  getCircleRadiusBasedOnDisplayedImageSize(circleShape:any){
-    let img = this.image?.nativeElement;
+  getCircleRadiusBasedOnDisplayedImageSize(circleShape:circle, image:HTMLImageElement){
+    let img = image;
     return (Math.round((img.clientWidth / img.naturalWidth) * circleShape.radius));
   }
 
-
-  getTopLeftOffsets() {
-    const img = this.image?.nativeElement;
-    const svg = this.img_svg?.nativeElement;
+  getTopLeftOffsets(image: HTMLImageElement, svg:HTMLElement) {
+    const img = image;
     const element = svg.getBoundingClientRect();
     let left = Math.trunc((img.naturalWidth / img.clientWidth) * element.left);
     let top = Math.trunc((img.naturalHeight / img.clientHeight) * element.top);
@@ -535,15 +503,14 @@ export class AppComponent{
     };
   }
 
-  getTopLeftOffsetsResizing() {
-    const img = this.image?.nativeElement;
-    const svg = this.img_svg?.nativeElement;
+  getTopLeftOffsetsResizing(svg:HTMLElement) {
     const element = svg.getBoundingClientRect();
     return {
       offsetTop: Math.trunc(element.top),
       offsetLeft: Math.trunc(element.left)
     };
   }
+
   onMouseMove(event:MouseEvent, image: HTMLImageElement, svg:HTMLElement){
     const answer = this.currentAnswer;
     if (answer !== null){
@@ -553,19 +520,23 @@ export class AppComponent{
           this.moveCircleShape(event, image, svg);
         }
         else if(shape.resizing){
-
+          this.resizeCircle(event, image, svg);
         }
       }
       else if(answer.type === "rect"){
-        
+        if(shape.isMoving){
+          this.moveRectShape(event, image, svg);
+        }
       }
       else if(answer.type === "custom"){
-
+        if(shape.isMoving){
+          this.moveCustomShape(event, image, svg);
+        }
       }
     }
   }
 
-  onMouseUp(image: HTMLImageElement, svg:HTMLElement){
+  onMouseUp(){
     const answer = this.currentAnswer;
     if (answer !== null){
       let shape = answer.shapeObject;
@@ -574,14 +545,18 @@ export class AppComponent{
           this.stopMove();
         }
         else if(shape.resizing){
-
+          this.stopResizeCircle();
         }
       }
       else if(answer.type === "rect"){
-        
+        if(shape.isMoving){
+          this.stopMove();
+        }
       }
       else if(answer.type === "custom"){
-
+        if(shape.isMoving){
+          this.stopMoveCS();
+        }
       }
     }
   }
